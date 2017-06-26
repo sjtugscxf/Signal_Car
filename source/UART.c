@@ -10,20 +10,37 @@ License : MIT
 
 // === Receive ISR ===
 void UART3_IRQHandler(void){
-   uint8 tmp = UART_GetChar();
-   if (tmp == 'a'){
-     remote_state = 2;
-     UART_SendString("turn left");//
-   }else if (tmp == 'd'){
-     remote_state = 3;
-     UART_SendString("turn right");//
-   }else if (tmp == 'w'){
-     remote_state = 1;
-     UART_SendString("go ahead");
-   }else if (tmp == 's'){
-     remote_state = 0;
-     UART_SendString("stop");
-   }
+  static int row = 0, col = 0;
+  uint8 tmp = UART_GetChar();
+   
+    Oled_Printf(row, col, "%c", tmp);
+    
+    if (++col > 15) {
+      col = 0;
+      row++;
+    }
+}
+
+void sendCamImgToCamViewer(void)//符合freecars上位机协议的发送函数
+{
+  uint8 i,j;
+  UART_SendChar(0xFF);//FF,FE,FF,FE四个数表示一幅图像的开始
+  UART_SendChar(0xFE);
+  UART_SendChar(0xFF);
+  UART_SendChar(0xFE);
+  
+  for(i = 5;i <IMG_ROWS;i++)
+  {
+    for(j = 0;j<IMG_COLS;j++)
+    {
+      uint8 d = cam_buffer[i][j];
+      if(d > 0xFD) d = 0xFD;            //避开校验位
+      UART_SendChar(d);
+    }
+    UART_SendChar(0xFE);//FE,FE 2个数表示换行
+    UART_SendChar(0xFE);
+  }
+  j=0;
 }
 
 // ======== APIs ======
@@ -49,6 +66,22 @@ void UART_SendData(s16 data){
   while(!(UART3->S1 & UART_S1_TDRE_MASK));
   UART3->D = num;
 }
+
+/*  set bluetooth baud
+  UART_SendString("AT");
+  for (int i = 0; i < 3000; i++)
+    for (int j = 0; j < 30000; j++)
+      ;
+
+  Oled_Putstr(7,0,"1");
+  UART_SendString("AT+BAUD8");
+  for (int i = 0; i < 3000; i++)
+    for (int j = 0; j < 30000; j++)
+      ;
+
+  Oled_Putstr(7,0,"2");
+  UART_SendString("AT");
+*/
 
 // ----- Basic Functions -----
 

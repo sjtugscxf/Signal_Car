@@ -9,7 +9,8 @@ License : MIT
 
 
 U8 ADC0_enabled = 0;
-U8 ADC1_enabled = 0;//not used
+U8 ADC1_enabled = 0;
+int cnt_light;
 
 void main (void)
 {
@@ -28,8 +29,7 @@ void main (void)
   Motor_Init();
   Tacho_Init();
   Servo_Init();
-  PID_Init(); 
-  Cam_B_Init();//初始化Cam_B
+  //Wave_Init();  
   
 #if (CAR_TYPE==0)   // Magnet and Balance
   
@@ -39,12 +39,12 @@ void main (void)
   
 #elif (CAR_TYPE==1)     // CCD
   
-  CCD_Init();
+  //CCD_Init();
   
 #else               // Camera
   
   Cam_Init();
-  CCD_Init();
+  //CCD_Init();
 #endif
   
   //---  Press Key 1 to Continue ---
@@ -54,19 +54,14 @@ void main (void)
 
   __enable_irq();
   
-  // --- System Initiated ---   
+  // --- System Initiated ---
   while(1)
   {
-    set_car_state();
-    set_oled_menu();
-    if(car_state!=0)
-      Cam_B();
-    Cam_Algorithm();
+    //信标主程序，在AI.c里实现
+    AI_Run();
   }
 
 }
-
-
 
 
 // ===== System Interrupt Handler  ==== ( No Need to Edit )

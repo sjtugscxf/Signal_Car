@@ -2858,6 +2858,12 @@
   <group>
     <name>app</name>
     <file>
+      <name>$PROJ_DIR$\source\AI.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\source\AI.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\source\Cam.c</name>
     </file>
     <file>

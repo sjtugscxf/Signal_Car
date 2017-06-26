@@ -26,29 +26,11 @@ extern U32 pit0_time;   // time PIT0 ISR takes
 extern U32 pit1_time;   // time PIT1 ISR takes
 extern bool success_flag;
 
-
 // ===== APIs =====
 
 void PIT0_Init(u32 period_us);
 void PIT1_Init(u32 period_us);
 void PIT2_Init();
-
-// =========== PID CONTROL =========== 
-typedef struct {
-	double kp, ki, kd;
-	double lastErr, llastErr;
-	double pid;
-        double errSum;
-} PIDInfo;
-
-extern PIDInfo L, R;
-void PID_Init(); 
-void PWM(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R);      //前进的PID控制
-void PWMne(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R);   //后退的PID控制，都是输入正数，输入负数有奇怪的bug
-
-extern int16 speed_set;
-
-
 
 #define PIT2_VAL() (PIT->CHANNEL[2].CVAL)
 

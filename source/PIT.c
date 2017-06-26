@@ -6,7 +6,6 @@ License : MIT
 
 #include "includes.h"
 
-
 // ========= Variables =========
 
 //--- global ---
@@ -14,110 +13,91 @@ U32 time_us = 0;
 U32 pit0_time;
 U32 pit1_time; 
 
-
- 
 //--- local ---
 U32 pit1_time_tmp;
 
-// =========== PID CONTROL =========== 
-PIDInfo L, R;  //两个结构体指针，存与电机pid控制有关的量， 包括pid三个参数，lastErr
-double L_err = 0;
-double R_err = 0;
-double L_pwm = 0;
-double R_pwm = 0;
+extern char ch;
 
+U32 trig_time=0;
+bool success_flag=1;
+bool dir_choice=0;
+int  findl=0,findr=0;
+s16 ccd1_linethre[128];
+s16 linel=64,liner=64;
+s16 linelS=64,linerS=64;
+s16 middle=0;
+s16 middle_rec=0;
+bool nearflag=0;
+int nearflag_cnt=0;
+int i=0;
 
-
-int16 speed_set = 0;
-
-void PID_Init() 
-{
-  L.kp = 5;
-  L.ki = 2;
-  L.kd = 0;
-  R.kp = 5;
-  R.ki = 2;
-  R.kd = 0;
-  
-  L.lastErr=0;
-  L.errSum=0;
-  R.lastErr=0;
-  R.errSum=0;
-
-  //临时测试用：
-  debug_dir.kp=0;
-  debug_dir.kd=0;
-  
-}
-
-void PWM(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R)      //前进的PID控制
-{  
-  L_err=left_speed+tacho0;
-  R_err=right_speed-tacho1;
-  L->errSum+=L_err;
-  if(L->errSum>300) L->errSum=300;
-  if(L->errSum<-300) L->errSum=-300;
-  R->errSum+=R_err;
-  if(R->errSum>300) R->errSum=300;
-  if(R->errSum<-300)R->errSum=-300;
-  L_pwm=(L_err*L->kp + L->errSum*L->ki + (L_err-L->lastErr)*L->kd);
-  R_pwm=(R_err*R->kp + R->errSum*R->ki + (R_err-R->lastErr)*R->kd);
-  L->lastErr=L_err;
-  R->lastErr=R_err;
-  
-  if(L_pwm>700)  L_pwm=700;
-  if(R_pwm>700)  R_pwm=700;
-  if(L_pwm<-700)  L_pwm=-700;
-  if(R_pwm<-700)  R_pwm=-700;
-  MotorL_Output((int)(-L_pwm)); 
-  MotorR_Output((int)(-R_pwm));
-}
-
-void PWMne(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R)   //后退的PID控制，都是输入正数，输入负数有奇怪的bug
-{
-  L_err=left_speed-tacho0;
-  R_err=right_speed+tacho1;
-  L->errSum+=L_err;
-  if(L->errSum>300) L->errSum=300;
-  if(L->errSum<-300) L->errSum=-300;
-  R->errSum+=R_err;
-  if(R->errSum>300) R->errSum=300;
-  if(R->errSum<-300)R->errSum=-300;
-  L_pwm=(L_err*L->kp + L->errSum*L->ki + (L_err-L->lastErr)*L->kd);
-  R_pwm=(R_err*R->kp + R->errSum*R->ki + (R_err-R->lastErr)*R->kd);
-  L->lastErr=L_err;
-  R->lastErr=R_err;
-  
-  if(L_pwm>700)  L_pwm=700;
-  if(R_pwm>700)  R_pwm=700;
-  if(L_pwm<-700)  L_pwm=-700;
-  if(R_pwm<-700)  R_pwm=-700;
-  MotorL_Output((int)(L_pwm)); 
-  MotorR_Output((int)(R_pwm));
-}
-
-
+int cnttrig=0;
 
 // =========== PIT 1 ISR =========== 
 // ====  UI Refreshing Loop  ==== ( Low priority ) 
 
 void PIT1_IRQHandler(){
+  static int ct = 0;
+  static char dir = 0;
   
   PIT->CHANNEL[1].TFLG |= PIT_TFLG_TIF_MASK;
   
   pit1_time_tmp = PIT2_VAL();
   
   //------------------------
+ if (SW2())  UI_Operation_Service();
   
-  LED1_Tog();
+  //Bell_Service(); 
+
+  //UI_SystemInfo();  //显示初始信息
   
-  UI_Operation_Service();
+  if (SW2())  AI_ShowInfo();    //一直显示AI信息，开关1坏了
+  /*
+  ++nearflag_cnt;
+  if(nearflag_cnt>1000) nearflag_cnt=1000;
+  */
   
-  Bell_Service();
   
-  UI_SystemInfo();
+ /////////////////CCD避障程序，可不用/////////////////////
+ /*
+  CCD1_GetLine(ccd1_line);
+  findl=0;
+  findr=0;
+
+  for (int j=5;j<122;j++)  
+    ccd1_linethre[j]=ccd1_line[j-3]+ccd1_line[j-2]+ccd1_line[j-1]+ccd1_line[j]
+                     -ccd1_line[j+1]-ccd1_line[j+2]-ccd1_line[j+3]-ccd1_line[j+4];
   
+  for (int i=5;i<122;i++) {
+    if (ccd1_linethre[i]>CCDthre) {
+      for(int j=i-10;j<i;++j) {    //从i-10到i-k改宽度
+	    if(j<5) continue;
+        if(ccd1_linethre[j]<-CCDthre) {
+		  ++findr;
+		  middle=(i+j)/2;
+		}
+      }
+	}
+  }
+  */
+  /*for (int i=64;i<122;i++) {
+      if (ccd2_linethre[i]>60) {
+          for(int j=i-8;j<i;++j) 
+            if(ccd2_linethre[j]<-60)  {++findr;liner=(i+j)/2;}
+      }
+  }*/
   
+ // middle=(linel+liner)/2;
+  /*
+  if(findr>0 && middle>36 && middle<90) {
+	nearflag=1;
+	nearflag_cnt=0;
+	middle_rec=middle;
+  }
+  else {
+    if(nearflag_cnt>10) nearflag=0;
+  }
+*/
   //------------ Other -------------
   
   pit1_time_tmp = pit1_time_tmp - PIT2_VAL();
@@ -127,7 +107,6 @@ void PIT1_IRQHandler(){
 }
 
 
-
 //============ PIT 0 ISR  ==========
 // ====  Control  ==== ( High priority )
 
@@ -135,20 +114,14 @@ void PIT0_IRQHandler(){
   PIT->CHANNEL[0].TFLG |= PIT_TFLG_TIF_MASK;
   
   time_us += PIT0_PERIOD_US;
-
-  
-  
+ 
   //-------- System info -----
   
   pit0_time = PIT2_VAL();
     
   battery = Battery();
   
-  
-  
-  
   //-------- Get Sensers -----
-  
   
   // Tacho
   Tacho0_Get();
@@ -156,35 +129,26 @@ void PIT0_IRQHandler(){
   
   // UI operation input
   ui_operation_cnt += tacho0;  // use tacho0 or tacho1
-    
-
-  
+     
 #if (CAR_TYPE==0)   // Magnet and Balance
   
   Mag_Sample();
   
   gyro1 = Gyro1();
   gyro2 = Gyro2();
-  
-  
-  
+   
 #elif (CAR_TYPE==1)     // CCD
   
-  CCD1_GetLine(ccd1_line);
-  CCD2_GetLine(ccd2_line);
-  
-  
-  
+  //CCD1_GetLine(ccd1_line);
+  //CCD2_GetLine(ccd2_line);
   
 #else               // Camera
   
   // Results of camera are automatically put in cam_buffer[].
   
-  
 #endif
   
-  
-  
+ 
   // -------- Sensor Algorithm --------- ( Users need to realize this )
   
   // mag example : dir_error = Mag_Algorithm(mag_val);
@@ -192,9 +156,7 @@ void PIT0_IRQHandler(){
   // cam is complex. realize it in Cam_Algorithm() in Cam.c
   
   //-------- Controller --------
-
-
-
+  
   
   // not balance example : dir_output = Dir_PIDController(dir_error);
   // example : get 'motorL_output' and  'motorR_output'
@@ -206,9 +168,8 @@ void PIT0_IRQHandler(){
   
   // not balance example : Servo_Output(dir_output);  
   // example : MotorL_Output(motorL_output); MotorR_Output(motorR_output);
- //MotorL_Output(550); MotorR_Output(-550);
-
-  
+ //MotorL_Output(530); 
+ //MotorR_Output(-530);
   
   // ------- UART ---------
   
