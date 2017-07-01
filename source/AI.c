@@ -3,9 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-//test
-
-u8 redthre=120, CCDthre=60;
+u8 redthre=70, CCDthre=60;
 int straightspeed=30, leftaround=15, rightaround=22;   //L和R理论上的差速比例为3：5
 int last_red_number=0, last_ycenter=0, last_xcenter=0;
 int theroute=0;      //0左边过左转，1左边过右转，2右边过左转，3右边过右转
@@ -61,7 +59,7 @@ void PWM(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R)      //前进的PID
   if(L_pwm<-750)  L_pwm=-750;
   if(R_pwm<-750)  R_pwm=-750;
   MotorL_Output((int)(L_pwm)); 
-  MotorR_Output((int)(-R_pwm));
+  MotorR_Output((int)(R_pwm));
 }
 ////////////////////////////////////////////////////////////////////
 
@@ -87,7 +85,7 @@ void PWMne(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R)
   if(L_pwm<-750)  L_pwm=-750;
   if(R_pwm<-750)  R_pwm=-750;
   MotorL_Output((int)(-L_pwm)); 
-  MotorR_Output((int)(R_pwm));
+  MotorR_Output((int)(-R_pwm));
 }
 /////////////////////////////////////////////////////////////////////
 
@@ -313,8 +311,8 @@ if (SW2())
  // sprintf(OLED_Buffer[3], "err:    %6d  ", err);
   sprintf(OLED_Buffer[4], "theroute:    %6d  ", theroute);
   sprintf(OLED_Buffer[5], "middle_rec: %6d  ", middle_rec);
-  sprintf(OLED_Buffer[6], "near: %6d  ", go_near_flag);
-  sprintf(OLED_Buffer[7], "route_num: %6d  ", route_num);
+  sprintf(OLED_Buffer[6], "tacho0: %6d  ", tacho0);
+  sprintf(OLED_Buffer[7], "tacho1: %6d  ", tacho1);
 
   if (uivar<6)
   {

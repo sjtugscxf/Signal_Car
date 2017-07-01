@@ -169,7 +169,7 @@ void PIT0_IRQHandler(){
   // not balance example : Servo_Output(dir_output);  
   // example : MotorL_Output(motorL_output); MotorR_Output(motorR_output);
  //MotorL_Output(530); 
- //MotorR_Output(-530);
+ //MotorR_Output(530);
   
   // ------- UART ---------
   
