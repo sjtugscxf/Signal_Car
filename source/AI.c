@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+//test
+
 u8 redthre=120, CCDthre=60;
 int straightspeed=30, leftaround=15, rightaround=22;   //L和R理论上的差速比例为3：5
 int last_red_number=0, last_ycenter=0, last_xcenter=0;
