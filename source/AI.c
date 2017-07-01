@@ -17,7 +17,7 @@ void drawPlot();
 void drawCCD();
 void PWM(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R); //电机输出设置，left_speed right_speed 为左右速度期望值（给的参数符号正常）
                                                                  //（tacho0 为左编码器，向前为负，tacho1 为右编码器， 向前为正，左电机输出前进为正，右电机输出前进为负）
-                                                                 // eg. PWM(80, 90, &L, &R)   **L, R 为已经定义了的两个结构体指针，调用PWM时不用管， pid参数的初始化在AI_Init()
+//uvuvgyvyvvy    ugvuvvuvugv                                                             // eg. PWM(80, 90, &L, &R)   **L, R 为已经定义了的两个结构体指针，调用PWM时不用管， pid参数的初始化在AI_Init()
                                                                  // AI_run() 中有调用的例子（需要修改），板子上靠边是tacho0
 void PWMne(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R);
 
