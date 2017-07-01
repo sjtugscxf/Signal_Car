@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-u8 redthre=70, CCDthre=60;
+u8 redthre=120, CCDthre=60;
 int straightspeed=30, leftaround=15, rightaround=22;   //L和R理论上的差速比例为3：5
 int last_red_number=0, last_ycenter=0, last_xcenter=0;
 int theroute=0;      //0左边过左转，1左边过右转，2右边过左转，3右边过右转
