@@ -113,7 +113,7 @@ void HMI_Init(void){
   PTD->PDDR |= (1<<15);
   PTD->PDOR &=~ (1<<15);
 
-/*  //==== battery ====
+  //==== battery ====
   
   if(!ADC1_enabled){
     SIM->SCGC3 |= SIM_SCGC3_ADC1_MASK;  //ADC1 Clock Enable
@@ -127,7 +127,7 @@ void HMI_Init(void){
     
     ADC1->SC1[0]&=~ADC_SC1_AIEN_MASK;//disenble interrupt
     ADC1_enabled = 1;
-  }*/
+  }
 }
 
 
