@@ -29,7 +29,7 @@ const char *stateTable[] = {
 };
 char OLED_Buffer[8][64];
 char ui_buffer[8][64]; // 现在只用5个
-
+////
 State state;
 PIDInfo L, R;  //两个结构体指针，存与电机pid控制有关的量， 包括pid三个参数，lastErr
 
