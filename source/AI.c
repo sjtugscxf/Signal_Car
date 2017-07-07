@@ -3,11 +3,11 @@
 #include <stdio.h>
 #include <string.h>
 
-u8 redthre=120, CCDthre=60;
-int straightspeed=30, leftaround=15, rightaround=22;   //L和R理论上的差速比例为3：5
+u8 redthre=110, CCDthre=60;
+int straightspeed=40, leftaround=21, rightaround=30;   //L和R理论上的差速比例为3：5
 int last_red_number=0, last_ycenter=0, last_xcenter=0;
 int theroute=0;      //0左边过左转，1左边过右转，2右边过左转，3右边过右转
-int route[10]={1,0,3,3,3,0,3,0,3,3};
+int route[10]={3,3,3,3,3,3,3,3,3,3};
 int route_num=0;
 bool far_flag=0;
 int cnt_far=0;
@@ -17,7 +17,7 @@ void drawPlot();
 void drawCCD();
 void PWM(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R); //电机输出设置，left_speed right_speed 为左右速度期望值（给的参数符号正常）
                                                                  //（tacho0 为左编码器，向前为负，tacho1 为右编码器， 向前为正，左电机输出前进为正，右电机输出前进为负）
-//uvuvgyvyvvy    ugvuvvuvugv                                                             // eg. PWM(80, 90, &L, &R)   **L, R 为已经定义了的两个结构体指针，调用PWM时不用管， pid参数的初始化在AI_Init()
+                                                                 // eg. PWM(80, 90, &L, &R)   **L, R 为已经定义了的两个结构体指针，调用PWM时不用管， pid参数的初始化在AI_Init()
                                                                  // AI_run() 中有调用的例子（需要修改），板子上靠边是tacho0
 void PWMne(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R);
 
@@ -54,12 +54,12 @@ void PWM(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R)      //前进的PID
   L->lastErr=L_err;
   R->lastErr=R_err;
   
-  if(L_pwm>750)  L_pwm=750;
-  if(R_pwm>750)  R_pwm=750;
-  if(L_pwm<-750)  L_pwm=-750;
-  if(R_pwm<-750)  R_pwm=-750;
+  if(L_pwm>800)  L_pwm=800;
+  if(R_pwm>800)  R_pwm=800;
+  if(L_pwm<-800)  L_pwm=-800;
+  if(R_pwm<-800)  R_pwm=-800;
   MotorL_Output((int)(L_pwm)); 
-  MotorR_Output((int)(-R_pwm));
+  MotorR_Output((int)(R_pwm));
 }
 ////////////////////////////////////////////////////////////////////
 
@@ -80,12 +80,12 @@ void PWMne(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R)
   L->lastErr=L_err;
   R->lastErr=R_err;
   
-  if(L_pwm>750)  L_pwm=750;
-  if(R_pwm>750)  R_pwm=750;
-  if(L_pwm<-750)  L_pwm=-750;
-  if(R_pwm<-750)  R_pwm=-750;
+  if(L_pwm>750)  L_pwm=800;
+  if(R_pwm>750)  R_pwm=800;
+  if(L_pwm<-750)  L_pwm=-800;
+  if(R_pwm<-750)  R_pwm=-800;
   MotorL_Output((int)(-L_pwm)); 
-  MotorR_Output((int)(R_pwm));
+  MotorR_Output((int)(-R_pwm));
 }
 /////////////////////////////////////////////////////////////////////
 
@@ -106,21 +106,21 @@ bool isWhite(u8 x) {     //白色阈值，场地理想后好像没什么用
 /*
  * 控制相关
  */
-#define DIR_MAX 230    //最大转弯，根据实际情况调
+#define DIR_MAX 300    //最大转弯，根据实际情况调
 
 ///////////////////////////////////////
 ///根据信标偏移程度确定舵机转角规划路径，左右不对称分开
 void dirControlR(int row, int col) {
   int err = 0;
   
-  if (row>53)   err = col - (87-row);
-  else if (row>24)  err = col - (59-row*16/29) ;
-  else err = col - 56;
+  if (row>40)   err = col - (67-row);
+  else if (row>35 )  err = col - (49-row*16/29);
+  else err = col - 96;
   sprintf(OLED_Buffer[3], "err:    %6d  ", err);
   static int lastErr = 0;
   int pid;
   
-  if(go_near_flag &&(err>15)|| (err<-15) ) pid = 5 * err;
+  if(go_near_flag &&(err>15)|| (err<-15) ) pid = 6 * err;
   else pid = 3 * err;      //比例调节应该够了
   
   if (pid > DIR_MAX)  pid = DIR_MAX;
@@ -131,10 +131,10 @@ void dirControlR(int row, int col) {
 
 void dirControlL(int row, int col) {
   int err = 0;
-  
-  if (row>53)   err = col - (row+33);
+  if (row>40)   err = (col*0.1+48-row);
+  if (row>20)   err = col - (row+40);
   else if (row>24)  err = col - (row*16/29+61) ;
-  else err = col - 64;
+  else err = col -24;
   sprintf(OLED_Buffer[3], "err:    %6d  ", err);
   static int lastErr = 0;
   int pid;
@@ -311,8 +311,8 @@ if (SW2())
  // sprintf(OLED_Buffer[3], "err:    %6d  ", err);
   sprintf(OLED_Buffer[4], "theroute:    %6d  ", theroute);
   sprintf(OLED_Buffer[5], "middle_rec: %6d  ", middle_rec);
-  sprintf(OLED_Buffer[6], "near: %6d  ", go_near_flag);
-  sprintf(OLED_Buffer[7], "route_num: %6d  ", route_num);
+  sprintf(OLED_Buffer[6], "tacho0: %6d  ", tacho0);
+  sprintf(OLED_Buffer[7], "tacho1: %6d  ", tacho1);
 
   if (uivar<6)
   {
