@@ -11,6 +11,7 @@ int route[10]={3,3,3,3,3,3,3,3,3,3};
 int route_num=0;
 bool far_flag=0;
 int cnt_far=0;
+int error=0;
 bool go_near_flag=0;
 void drawCam(bool(*isTarget)(u8 x));
 void drawPlot();
@@ -106,26 +107,26 @@ bool isWhite(u8 x) {     //白色阈值，场地理想后好像没什么用
 /*
  * 控制相关
  */
-#define DIR_MAX 300    //最大转弯，根据实际情况调
+#define DIR_MAX 250    //最大转弯，根据实际情况调
 
 ///////////////////////////////////////
 ///根据信标偏移程度确定舵机转角规划路径，左右不对称分开
 void dirControlR(int row, int col) {
   int err = 0;
   
-  if (row>40)   err = col - (67-row);
-  else if (row>35 )  err = col - (49-row*16/29);
+  if (row>47)   err = 0.2*col - (7-1.2*row);
+  else if (row>24)  err = col - (59-row*16/29) ;
   else err = col - 96;
   sprintf(OLED_Buffer[3], "err:    %6d  ", err);
   static int lastErr = 0;
   int pid;
-  
   if(go_near_flag &&(err>15)|| (err<-15) ) pid = 6 * err;
   else pid = 3 * err;      //比例调节应该够了
   
   if (pid > DIR_MAX)  pid = DIR_MAX;
   if (pid < -DIR_MAX) pid = -DIR_MAX;
   Servo_Output(pid);
+  error=pid;;
   lastErr = err;
 }
 
@@ -280,8 +281,13 @@ void AI_Run() {
           LED2(1);
           if(theroute==0||theroute==1) dirControlL(red.yCenter, red.xCenter);
           else dirControlR(red.yCenter, red.xCenter);
-        }       
-       PWM(straightspeed, straightspeed, &L, &R);
+        }   
+        straightspeed=40;
+        
+       if (red.xCenter>0&&red.xCenter<30)
+          straightspeed=straightspeed+4-0.1*(red.xCenter);
+
+        PWM(straightspeed, straightspeed, &L, &R);
       }
       if (red.number <= RED_NUMBER_NO)
       {
@@ -308,7 +314,7 @@ if (SW2())
   sprintf(OLED_Buffer[0], "redNumber: %6d  ", red.number);
   sprintf(OLED_Buffer[1], "rexCenter: %6d  ", red.xCenter);
   sprintf(OLED_Buffer[2], "reyCenter: %6d  ", red.yCenter);
- // sprintf(OLED_Buffer[3], "err:    %6d  ", err);
+  sprintf(OLED_Buffer[3], "err:    %6d  ", error);
   sprintf(OLED_Buffer[4], "theroute:    %6d  ", theroute);
   sprintf(OLED_Buffer[5], "middle_rec: %6d  ", middle_rec);
   sprintf(OLED_Buffer[6], "tacho0: %6d  ", tacho0);
