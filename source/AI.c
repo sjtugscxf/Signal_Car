@@ -119,10 +119,10 @@ void dirControlR(int row, int col) {
   err=col-96;
   dir=4*err+2*(err-last_e);
   last_e=err;
-  Servo_Output(dir);
+  Servo_Output(dir);*/
 
   
- /* if (row>47)   err = 0.2*col - (7-1.2*row);
+  if (row>47)   err = 0.2*col - (7-1.2*row);
   else if (row>24)  err = col - (59-row*16/29) ;
   else err = col - 96;
   sprintf(OLED_Buffer[3], "err:    %6d  ", err);
@@ -135,7 +135,7 @@ void dirControlR(int row, int col) {
   if (pid < -DIR_MAX) pid = -DIR_MAX;
   Servo_Output(pid);
   error=pid;;
-  lastErr = err;*/
+  lastErr = err;
 }
 
 void dirControlL(int row, int col) {
