@@ -8,7 +8,7 @@ License : MIT
 
 
 // ===== Setting =====
-#define SERVO_MID 12975 // (g_bus_clock/64*15/10000)  Adjust it according to your mech//12950
+#define SERVO_MID 12820 // (g_bus_clock/64*15/10000)  Adjust it according to your mech//12950
 // 原来的信标车是12021
 
 

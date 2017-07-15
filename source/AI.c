@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
-u8 redthre=80, CCDthre=60;
-int straightspeed=40, leftaround=21, rightaround=30;   //L和R理论上的差速比例为3：5
+u8 redthre=110, CCDthre=60;
+int straightspeed=20, leftaround=12, rightaround=18;   //L和R理论上的差速比例为3：5
 int last_red_number=0, last_ycenter=0, last_xcenter=0;
 int theroute=0;      //0左边过左转，1左边过右转，2右边过左转，3右边过右转
 int route[10]={3,3,3,3,3,3,3,3,3,3};
@@ -42,8 +42,8 @@ extern bool nearflag;
 //前进速度PID控制
 void PWM(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R)      //前进的PID控制
 {  
-  double L_err=left_speed+tacho0;
-  double R_err=right_speed-tacho1;
+  double L_err=left_speed-tacho0;
+  double R_err=right_speed+tacho1;
   L->errSum+=L_err;
   if(L->errSum>300) L->errSum=300;
   if(L->errSum<-300) L->errSum=-300;
@@ -60,7 +60,7 @@ void PWM(u8 left_speed, u8 right_speed, PIDInfo *L, PIDInfo *R)      //前进的PID
   if(L_pwm<-800)  L_pwm=-800;
   if(R_pwm<-800)  R_pwm=-800;
   MotorL_Output((int)(L_pwm)); 
-  MotorR_Output((int)(R_pwm));
+  MotorR_Output((int)(-R_pwm));
 }
 ////////////////////////////////////////////////////////////////////
 
@@ -107,7 +107,7 @@ bool isWhite(u8 x) {     //白色阈值，场地理想后好像没什么用
 /*
  * 控制相关
  */
-#define DIR_MAX 250    //最大转弯，根据实际情况调
+#define DIR_MAX 200    //最大转弯，根据实际情况调
 
 ///////////////////////////////////////
 ///根据信标偏移程度确定舵机转角规划路径，左右不对称分开
@@ -115,7 +115,7 @@ void dirControlR(int row, int col) {
   int err = 0;
   int last_e=0;
   int dir;
-  
+ /*
   err=col-96;
   dir=4*err+2*(err-last_e);
   last_e=err;
@@ -123,13 +123,13 @@ void dirControlR(int row, int col) {
 
   
   if (row>47)   err = 0.2*col - (7-1.2*row);
-  else if (row>24)  err = col - (59-row*16/29) ;
+  else if (row>24)  err = col - (100-row*16/29) ;
   else err = col - 96;
   sprintf(OLED_Buffer[3], "err:    %6d  ", err);
   static int lastErr = 0;
   int pid;
-  if(go_near_flag &&(err>15)|| (err<-15) ) pid = 6 * err;
-  else pid = 3 * err;      //比例调节应该够了
+  if(go_near_flag &&(err>20)|| (err<-20) ) pid = 3 * err;
+  else pid = 2 * err;      //比例调节应该够了
   
   if (pid > DIR_MAX)  pid = DIR_MAX;
   if (pid < -DIR_MAX) pid = -DIR_MAX;
@@ -290,11 +290,11 @@ void AI_Run() {
           if(theroute==0||theroute==1) dirControlL(red.yCenter, red.xCenter);
           else dirControlR(red.yCenter, red.xCenter);
         }   
-        straightspeed=40;
+      /*  straightspeed=40;
         
        if (red.xCenter>0&&red.xCenter<30)
           straightspeed=straightspeed+4-0.1*(red.xCenter);
-
+*/
         PWM(straightspeed, straightspeed, &L, &R);
       }
       if (red.number <= RED_NUMBER_NO)
